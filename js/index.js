@@ -13,7 +13,7 @@ function escapeHTML(text) {
 }
 
 function fixLink(link) {
-  if (/cdn\.discordapp\.com/.test(link)) return link;
+  if (/cdn\.discordapp\.com/.test(link)) return link + "?size=128";
   return link.replace(/https:\/\//i, 'http://');
 }
 
