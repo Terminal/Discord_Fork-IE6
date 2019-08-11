@@ -9,12 +9,15 @@ if (window.XMLHttpRequest) {
 
 function escapeHTML(text) {
   return text.replace(/</g, '&lt;')
-  .replace(/>/g, '&gt;')
+    .replace(/>/g, '&gt;')
 }
 
 function fixLink(link) {
-  if (/cdn\.discordapp\.com/.test(link)) return link + "?size=128";
-  return link.replace(/https:\/\//i, 'http://');
+  return 'http://api.discordapps.dev' + link
+}
+
+function replaceText(text) {
+  return text.replace(/[^\x00-\x7F]/g, '?');
 }
 
 // http://stackoverflow.com/questions/2450954/how-to-randomize-shuffle-a-javascript-array
@@ -38,46 +41,55 @@ function shuffle(array) {
 }
 
 xhttp.onreadystatechange = function() {
-  var data = shuffle(JSON.parse(xhttp.responseText));
+  var data = shuffle(JSON.parse(xhttp.responseText).data);
   for (i = 0; i < data.length; i++) {
-    var row = document.createElement('div');
-    var avatar = document.createElement('img');
-    var title = document.createElement('h2');
-    var description = document.createElement('p');
-    var invite = document.createElement('a');
-    avatar.className = 'BOT-AVATAR';
+    try {
+      var bot = data[i];
 
-    avatar.src = fixLink(data[i].avatar);
-    title.innerHTML = data[i].name;
-    description.innerHTML = data[i].long_description;
-    invite.className = 'BTN';
-    invite.innerHTML = 'Invite this bot';
-    invite.href = data[i].link;
+      if (!bot.contents[0]) continue;
 
-    row.appendChild(avatar);
+      var row = document.createElement('div');
+      var avatar = document.createElement('img');
+      var title = document.createElement('h2');
+      var description = document.createElement('p');
+      var invite = document.createElement('a');
+      avatar.className = 'BOT-AVATAR';
+      row.className = 'ROW';
 
-    if (data[i].nsfw) {
-      var nsfw = document.createElement('blink');
-      nsfw.innerHTML = 'Warning! This bot is NSFW.';
-      nsfw.className = 'NSFW-1';
-      nsfwButtons.push(nsfw);
-      row.appendChild(nsfw);
+      avatar.src = fixLink(bot.cachedImages.avatar);
+      title.innerHTML = replaceText(bot.contents[0].name);
+      description.innerHTML = replaceText(bot.contents[0].description);
+      invite.className = 'BTN';
+      invite.innerHTML = 'Invite this bot';
+      invite.href = bot.invite;
+
+      row.appendChild(avatar);
+
+      if (bot.nsfw) {
+        var nsfw = document.createElement('blink');
+        nsfw.innerHTML = 'Warning! This bot is NSFW.';
+        nsfw.className = 'NSFW-1';
+        nsfwButtons.push(nsfw);
+        row.appendChild(nsfw);
+      }
+
+      row.appendChild(title);
+      row.appendChild(description);
+      row.appendChild(invite);
+
+      if (bot.github && bot.github.owner && bot.github.repo) {
+        var svn = document.createElement('a');
+        svn.className = 'BTN';
+        svn.innerHTML = 'View on Microsoft GitHub Pro 1998';
+        svn.href = 'http://github.com/' + bot.github.owner + '/' + bot.github.repo;
+        row.appendChild(svn);
+      }
+
+      row.appendChild(document.createElement('hr'));
+      list.appendChild(row);
+    } catch(e) {
+      continue;
     }
-
-    row.appendChild(title);
-    row.appendChild(description);
-    row.appendChild(invite);
-
-    if (data[i].github && data[i].github.owner && data[i].github.repo) {
-      var svn = document.createElement('a');
-      svn.className = 'BTN';
-      svn.innerHTML = 'View on GitHub';
-      svn.href = 'http://github.com/' + data[i].github.owner + '/' + data[i].github.repo;
-      row.appendChild(svn);
-    }
-
-    row.appendChild(document.createElement('hr'));
-    list.appendChild(row);
   }
 }
 
